@@ -4,7 +4,7 @@ const glob = require('glob');
 const pagesPath = require("./pagespath.js")
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const OpenBrowserPlugin = require('open-browser-webpack-plugin');
+//const OpenBrowserPlugin = require('open-browser-webpack-plugin');
 const CleanPlugin = require('clean-webpack-plugin');
 const CommonsChunkPlugin = webpack.optimize.CommonsChunkPlugin;
 let entriesObj = pagesPath.getView('./src/**/*.js');
@@ -16,42 +16,47 @@ const config = {
     output: {
         path: path.resolve(__dirname, prod ? "../dist" : ""),
         filename: prod ? "js/[name].[hash:8].min.js" : "[name].[hash:8].js",
-        chunkFilename: prod ?'js/[name].chunk.js':'',
+        chunkFilename: prod ?'js/[name].js':'',
         publicPath: prod ?"../":''//prod ? "http:cdn.mydomain.com" : ""
     },
     resolve: {
         //配置项,设置忽略js后缀
-        extensions: ['', '.js', '.less', '.css', '.png', '.jpg'],
-        root: './src',
-        // 模块别名
-        alias: {
-            //jquery:'src/lib/jquery-3.3.1.js'
-        }
+        extensions: ['.js', '.less', '.css', '.png', '.jpg'],
+        modules:[
+            path.resolve(__dirname,'node_modules'),
+            path.join(__dirname,'./src')
+        ]
     },
     module: {
-        loaders: [{
+        rules: [{
             test: /\.(png|jpg|jpeg|gif)$/,
-            loader: 'url?limit=10000&name=images/[name].[ext]&outputPath=img/&publicPath=output/',
-            options:{
-                publicPath:'./images'
-            }
+            use:[
+                {
+                    loader:"url-loader",
+                    options:{
+                        limit:1024,
+                        name:'images/[name].[ext]',
+                        outputPath:'img',
+                        publicPath:'output',
+                        publicPath:'./images'
+                    }
+                }
+            ]
         }, {
             test: /\.less$/,
-            loader: ExtractTextPlugin.extract('style', 'css!less',{
-                publicPath:'../'
-            })
+            use: ExtractTextPlugin.extract({fallback:'style-loader',use:['css-loader','less-loader'] })
         }, {
             test: /\.js[x]?$/,
             exclude: /node_modules/,
-            loader: 'babel?presets[]=es2015&presets[]=react'
+            use: 'babel-loader'
         }, {
             test: /\.html$/,
-            loader: 'html?attrs=img:src img:srcset'
+            use: 'html-loader?attrs=img:src img:srcset'
         }]
     },
-    externals:{
-        'jquery':'window.$'
-    },
+    // externals:{
+    //     'jquery':'window.$'
+    // },
     plugins: [
         // new HtmlWebpackPlugin({
         //     filename: 'index.html',
@@ -62,13 +67,10 @@ const config = {
         }),
         // 启动热替换
         new webpack.HotModuleReplacementPlugin(),
-        new ExtractTextPlugin('css/[name].[contentHash:8].css', {
-            allChunks: true
-        }),
-        new webpack.NoErrorsPlugin(),
-        new OpenBrowserPlugin({
-            url: 'http://localhost:8080'
-        }),
+        new ExtractTextPlugin({filename:'css/[name].[contentHash:8].css'}),
+        // new OpenBrowserPlugin({
+        //     url: 'http://localhost:8080'
+        // }),
         /* 公共库 */
         new CommonsChunkPlugin({
             name: 'vendors',
@@ -81,7 +83,7 @@ pages.forEach(pathname=>{
     //let htmlname = pathname.split('src\\')[1];
     let extname2 = path.extname(pathname);//文件后缀
     let basename = path.basename(pathname,extname2)
-    console.log(pathname,basename)
+    console.log(__dirname,basename)
     let conf = {
         filename:prod?'html/'+basename+'.html':basename+'.html',
         //`${basename}.html`,
@@ -110,27 +112,24 @@ if (process.env.NODE_ENV === 'production') {
                     warnings: false
                 }
             }),
-            new webpack.optimize.OccurenceOrderPlugin(),
+            //new webpack.optimize.OccurenceOrderPlugin(),
         ]);
 } else {
     config.devtool = '#cheap-module-eval-source-map';
     config.devServer = {
-        port: 8094,
-        inline:true,
-        contentBase: './',
+        port: 8087,
+        host:'0.0.0.0',
         hot: true,
-        historyApiFallback: true,
-        publicPath: "",
-        stats: {
-            colors: true
-        },
+        overlay:{
+            errors:true
+        }
         // plugins: [
         //     new webpack.HotModuleReplacementPlugin()
         // ]
     };
     config.plugins.push(
         new webpack.HotModuleReplacementPlugin(),
-        new webpack.NoErrorsPlugin(),    
+        new webpack.NoEmitOnErrorsPlugin(),    
     )
 }
 module.exports = config
