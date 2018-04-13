@@ -17,7 +17,7 @@ const config = {
         path: path.resolve(__dirname, prod ? "../dist" : "../build"),
         filename: prod ? "js/[name].[hash:8].min.js" : "js/[name].[hash:8].js",
         chunkFilename: prod ?'js/[name].js':'',
-        publicPath: prod ?"../":''//prod ? "http:cdn.mydomain.com" : ""
+        publicPath: prod ?"../":'../'//prod ? "http:cdn.mydomain.com" : ""
     },
     resolve: {
         //配置项,设置忽略js后缀
@@ -42,14 +42,40 @@ const config = {
                     }
                 }
             ]
-        }, {
+        },
+        {
+            test:/\.styl$/,
+            use:ExtractTextPlugin.extract({
+                fallback:'style-loader',
+                use:[
+                    'css-loader',
+                    {
+                        loader:'postcss-loader',
+                        options:{
+                            sourceMap:true
+                        }
+                    },
+                    'stylus-loader'
+                ]
+            })
+        },
+        {
             test: /\.less$/,
-            use: ExtractTextPlugin.extract({fallback:'style-loader',use:['css-loader','less-loader'] })
-        }, {
-            test: /\.js[x]?$/,
-            exclude: /node_modules/,
-            use: 'babel-loader'
-        }, {
+            use: ExtractTextPlugin.extract({
+                    fallback:'style-loader',
+                    use:[
+                        'css-loader',
+                        {
+                            loader:'postcss-loader',
+                            options:{
+                                sourceMap:true
+                            }
+                        },
+                        'less-loader'
+                    ]
+            })
+        },
+        {
             test: /\.html$/,
             use: 'html-loader?attrs=img:src img:srcset'
         }]
@@ -57,24 +83,13 @@ const config = {
     externals: {
         jquery: 'window.$'
     },
-    // externals:{
-    //     'jquery':'window.$'
-    // },
     plugins: [
-        // new webpack.ProvidePlugin({
-        //     $:"jquery",
-        //     jQuery:"jquery",
-        //     "window.jQuery":"jquery"
-        // }),
         new CleanPlugin(['dist', 'build'],{
             root:path.dirname(__dirname)
         }),
         // 启动热替换
         new webpack.HotModuleReplacementPlugin(),
         new ExtractTextPlugin({filename:'css/[name].[contentHash:8].css'}),
-        // new OpenBrowserPlugin({
-        //     url: 'http://localhost:8080'
-        // }),
         /* 公共库 */
         new CommonsChunkPlugin({
             name: 'vendors',
