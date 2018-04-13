@@ -14,8 +14,8 @@ const config = {
         vendors:'jquery'
     }) ,
     output: {
-        path: path.resolve(__dirname, prod ? "../dist" : ""),
-        filename: prod ? "js/[name].[hash:8].min.js" : "[name].[hash:8].js",
+        path: path.resolve(__dirname, prod ? "../dist" : "../build"),
+        filename: prod ? "js/[name].[hash:8].min.js" : "js/[name].[hash:8].js",
         chunkFilename: prod ?'js/[name].js':'',
         publicPath: prod ?"../":''//prod ? "http:cdn.mydomain.com" : ""
     },
@@ -54,13 +54,17 @@ const config = {
             use: 'html-loader?attrs=img:src img:srcset'
         }]
     },
+    externals: {
+        jquery: 'window.$'
+    },
     // externals:{
     //     'jquery':'window.$'
     // },
     plugins: [
-        // new HtmlWebpackPlugin({
-        //     filename: 'index.html',
-        //     template: './src/index/index.html'
+        // new webpack.ProvidePlugin({
+        //     $:"jquery",
+        //     jQuery:"jquery",
+        //     "window.jQuery":"jquery"
         // }),
         new CleanPlugin(['dist', 'build'],{
             root:path.dirname(__dirname)
@@ -85,7 +89,7 @@ pages.forEach(pathname=>{
     let basename = path.basename(pathname,extname2)
     console.log(__dirname,basename)
     let conf = {
-        filename:prod?'html/'+basename+'.html':basename+'.html',
+        filename:'html/'+basename+'.html',
         //`${basename}.html`,
         template:`${pathname}.html`,
         hash:true,
