@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "test",
-    "dev": "cross-env webpack-dev-server --inline --config config/webpack.config.js",
-    "build": "cross-env NODE_ENV=production&&webpack  --progress --colors --config config/webpack.config.js"
+    "build": "cross-env NODE_ENV=production webpack --config webpack.config.js",
+    "dev": "cross-env NODE_ENV=development webpack-dev-server --inline --config webpack.config.js"
   },
   "author": "lizn",
   "license": "MIT",
